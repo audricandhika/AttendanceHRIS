@@ -66,13 +66,14 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
   }
 
   Future<void> _addHoliday() async {
+    final rootContext = context;
     DateTime? selectedDate;
     final nameController = TextEditingController();
 
     await showDialog(
       context: context,
-      builder: (context) => StatefulBuilder(
-        builder: (context, setDialogState) => AlertDialog(
+      builder: (dialogContext) => StatefulBuilder(
+        builder: (dialogContext, setDialogState) => AlertDialog(
           title: const Text('Tambah Libur Custom'),
           content: Column(
             mainAxisSize: MainAxisSize.min,
@@ -109,21 +110,17 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
             ],
           ),
           actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: const Text('Batal'),
-            ),
             ElevatedButton(
               onPressed:
                   (selectedDate != null && nameController.text.isNotEmpty)
                   ? () async {
-                      Navigator.pop(context);
+                      Navigator.pop(dialogContext);
                       final res = await ScheduleService.addHoliday(
                         date: DateFormat('yyyy-MM-dd').format(selectedDate!),
                         name: nameController.text,
                       );
                       if (!mounted) return;
-                      ScaffoldMessenger.of(context).showSnackBar(
+                      ScaffoldMessenger.of(rootContext).showSnackBar(
                         SnackBar(
                           content: Text(res.message),
                           backgroundColor: res.success
@@ -170,10 +167,21 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
       builder: (context) => AlertDialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
         title: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Icon(icon, color: Theme.of(context).primaryColor),
             const SizedBox(width: 12),
-            Text(DateFormat('dd MMMM yyyy', 'id_ID').format(day)),
+            Expanded(
+              child: Text(
+                DateFormat('dd MMMM yyyy', 'id_ID').format(day),
+                style: const TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                ),
+                overflow: TextOverflow.ellipsis,
+                maxLines: 2,
+              ),
+            ),
           ],
         ),
         content: Column(
@@ -186,10 +194,10 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
               title,
               style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
             ),
-            if (!item.isWorkday && item.holidayName != null)
+            if (!item.isWorkday)
               Text(
-                "→ ${item.holidayName}",
-                style: const TextStyle(color: Colors.red),
+                subtitle,
+                style: const TextStyle(fontSize: 14, color: Colors.red),
               ),
           ],
         ),
